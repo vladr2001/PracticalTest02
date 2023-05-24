@@ -2,18 +2,16 @@ package ro.pub.cs.systems.eim.practicaltest02;
 
 import android.util.Log;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
-import org.jsoup.select.Elements;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.util.ArrayList;
 import java.util.HashMap;
 
 import cz.msebera.android.httpclient.HttpEntity;
@@ -115,6 +113,72 @@ public class CommunicationThread extends Thread {
                 return;
             }
             System.out.println("pagesourcecode is " + pageSourceCode);
+
+            JSONObject obj;
+            try {
+                obj = new JSONObject(pageSourceCode);
+            } catch (JSONException e) {
+                throw new RuntimeException(e);
+            }
+
+            System.out.println("obj is " + obj);
+
+            ArrayList<String> abs = new ArrayList<>();
+            ArrayList<String> ts = new ArrayList<>();
+            JSONArray types;
+            JSONArray abilities;
+
+            try {
+                abilities = obj.getJSONArray("abilities");
+            } catch (JSONException e) {
+                throw new RuntimeException(e);
+            }
+
+            try {
+                types = obj.getJSONArray("types");
+            } catch (JSONException e) {
+                throw new RuntimeException(e);
+            }
+
+            for (int i = 0; i < abilities.length(); i++) {
+                try {
+                    JSONObject helper = abilities.getJSONObject(i);
+                    abs.add(helper.getJSONObject("ability").getString("name"));
+                } catch (JSONException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+
+
+            for (int i = 0; i < types.length(); i++) {
+                try {
+                    JSONObject helper = types.getJSONObject(i);
+                    ts.add(helper.getJSONObject("type").getString("name"));
+                } catch (JSONException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+
+            System.out.println("types array list is " + ts.toString());
+            System.out.println("abilities array list is " + abs.toString());
+            String url;
+            try {
+                url = obj.getJSONObject("sprites").getString("front_default");
+                HttpGet httpGetCartoon = new HttpGet(url);
+                HttpResponse httpResponse = httpClient.execute(httpGetCartoon);
+                HttpEntity httpEntity = httpResponse.getEntity();
+            } catch (JSONException | IOException e) {
+                throw new RuntimeException(e);
+            }
+
+
+
+            printWriter.println(abs.toString());
+            printWriter.flush();
+            printWriter.println(ts.toString());
+            printWriter.flush();
+            printWriter.println(url);
+            printWriter.flush();
 
         }
     }
